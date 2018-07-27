@@ -1,0 +1,3 @@
+GET  /auth/login  Auth.Login
+POST /auth/login  Auth.Authenticate
+POST /auth/logout Auth.Logout
