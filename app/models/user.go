@@ -3,7 +3,7 @@ package models
 import (
 	mgo "github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	mgofun "gopkg.in/lujiacn/mgofun.v3"
+	mgodo "gopkg.in/lujiacn/mgodo.v0"
 )
 
 const (
@@ -16,49 +16,52 @@ const (
 )
 
 type User struct {
-	mgofun.BaseModel `bson:",inline"`
-	Name             string `bson:"Name,omitempty"`
-	First            string `bson:"First,omitempty"`
-	Last             string `bson:"Last,omitempty"`
-	Mail             string `bson:"Mail,omitempty"`
-	Depart           string `bson:"Depart,omitempty"`
-	Avatar           string `bson:"Avatar,omitempty"`
-	Identity         string `bson:"Identity,omitempty"` //if ldap is SAMAccount
+	mgodo.BaseModel `bson:",inline"`
+	Identity        string `bson:"Identity,omitempty"` //if ldap is SAMAccount
+	Name            string `bson:"Name,omitempty"`
+	First           string `bson:"First,omitempty"`
+	Last            string `bson:"Last,omitempty"`
+	Mail            string `bson:"Mail,omitempty"`
+	Depart          string `bson:"Depart,omitempty"`
+	Avatar          string `bson:"Avatar,omitempty"`
 }
 
-func (c *User) GetAvatar() string {
-	if c.Avatar != "" {
-		return c.Avatar
-
+func (c *User) GetAvatar() {
+	if c.Avatar == "" {
+		c.Avatar = DefaultAvatar
 	}
-	return DefaultAvatar
 }
 
 //Save authorized saUser to local User
 func (c *User) SaveUser(s *mgo.Session) error {
+	c.GetAvatar()
 	//check if user exist
 	u := new(User)
 	q := bson.M{"Identity": c.Identity}
-	do := NewDo(s, u)
-	do.Query = q
-	err := do.GetByQ()
+	udo := mgodo.NewDo(s, mgodo.DBName, u)
+	udo.Operator = "SYS"
+	udo.Query = q
+	err := udo.GetByQ()
 	if err != nil && err != mgo.ErrNotFound {
 		return err
 	}
 
-	//if user not exist create new ObjectId
-	if !u.Id.Valid() {
-		c.Id = bson.NewObjectId()
-	} else {
-		//if user exist, just update Id
-		c.Id = u.Id
-	}
+	cdo = mgodo.NewDo(s, mgodo.DBName, c)
+	cdo.Operator = "SYS"
 
-	//Save User
-	do = NewDo(s, c)
-	err = do.Save()
-	if err != nil {
-		return err
+	//if user not exist create new
+	if !u.Id.Valid() {
+		err = cdo.Create()
+		if err != nil {
+			return err
+		}
+	} else {
+		//if user exist,update
+		c.Id = u.Id
+		err = cdo.Save()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

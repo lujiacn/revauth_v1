@@ -1,12 +1,11 @@
 package controllers
 
 import (
-	"path"
 	"strings"
 
 	"github.com/lujiacn/revauth/app/models"
 
-	auth "github.com/lujiacn/revauth/auth"
+	auth "github.com/lujiacn/revauth/app/auth"
 
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
@@ -31,23 +30,30 @@ func (c Auth) Authenticate(account, password string) revel.Result {
 	}
 
 	c.Session["Identity"] = strings.ToLower(account)
-	c.Session["UserName"] = authUser.Name
 
-	//save user information
-	user := &models.User{}
-	user.Identity = strings.ToLower(account)
-	user.Mail = authUser.Email
-	user.Avatar = authUser.Avatar
-	user.Name = authUser.Name
-	user.Depart = authUser.Depart
+	//save current user information
+	currentUser := new(models.User)
+	currentUser.Identity = strings.ToLower(account)
+	currentUser.Mail = authUser.Email
+	currentUser.Avatar = authUser.Avatar
+	currentUser.Name = authUser.Name
+	currentUser.Depart = authUser.Depart
 
-	err := user.SaveUser(c.MgoSession)
-	if err != nil {
-		c.Flash.Error("Error during save user", err)
-		return c.Redirect("/login")
-	}
+	// cache user info
+	go cache.Set(c.Session.ID(), currentUser, cache.DefaultExpiryTime)
 
-	c.Flash.Success("Welcome, %v", user.Name)
+	go func(user *models.User) {
+		// save to local user
+		s := mgodb.NewMgoSession()
+		defer s.Close()
+		err := user.SaveUser(s)
+		if err != nil {
+			revel.AppLog.Errorf("Save user error: %v", err)
+		}
+
+	}(currentUser)
+
+	c.Flash.Success("Welcome, %v", currentUser.Name)
 	return c.Redirect("/")
 }
 
@@ -59,12 +65,4 @@ func (c Auth) Logout() revel.Result {
 	c.Session = make(map[string]string)
 	c.Flash.Success("You have logged out.")
 	return c.Redirect("/")
-}
-
-//Login
-func (c Auth) Login() revel.Result {
-	AppName := strings.ToUpper(revel.AppName)
-	loginTpl := path.Join(revel.AppPath, "app", "views", "login.html")
-	c.ViewArgs["AppName"] = AppName
-	return c.RenderTemplate(loginTpl)
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	gAuth "grpcAuth/auth"
+	gAuth "grpcLdap/auth"
 
 	"github.com/revel/revel"
 	"google.golang.org/grpc"
