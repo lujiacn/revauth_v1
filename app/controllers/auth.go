@@ -3,7 +3,7 @@ package controllers
 import (
 	"strings"
 
-	"github.com/lujiacn/revauth/app/ldapauth"
+	"github.com/lujiacn/ldapauth"
 	"github.com/lujiacn/revauth/app/models"
 
 	"github.com/revel/revel"
