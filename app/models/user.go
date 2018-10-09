@@ -46,7 +46,7 @@ func (c *User) SaveUser(s *mgo.Session) error {
 		return err
 	}
 
-	cdo = mgodo.NewDo(s, mgodo.DBName, c)
+	cdo := mgodo.NewDo(s, mgodo.DBName, c)
 	cdo.Operator = "SYS"
 
 	//if user not exist create new

@@ -3,18 +3,18 @@ package controllers
 import (
 	"strings"
 
-	"github.com/lujiacn/revauth/app/models"
+	"github.com/lujiacn/revauth/app/revauth"
 
-	auth "github.com/lujiacn/revauth/app/auth"
+	"github.com/lujiacn/revauth/app/models"
 
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
-	mgodb "gopkg.in/lujiacn/mgodb.v1"
+	mgodo "gopkg.in/lujiacn/mgodo.v0"
 )
 
 type Auth struct {
 	*revel.Controller
-	mgodb.MgoController
+	mgodo.MgoController
 }
 
 //Authenticate for LDAP authenticate
@@ -23,7 +23,7 @@ func (c Auth) Authenticate(account, password string) revel.Result {
 		c.Flash.Error("Please fill in account and password")
 		return c.Redirect("/login")
 	}
-	authUser := auth.Authenticate(account, password)
+	authUser := revauth.Authenticate(account, password)
 	if !authUser.IsAuthenticated {
 		c.Flash.Error("Authenticate failed: %v", authUser.Error)
 		return c.Redirect("/login")
@@ -44,7 +44,7 @@ func (c Auth) Authenticate(account, password string) revel.Result {
 
 	go func(user *models.User) {
 		// save to local user
-		s := mgodb.NewMgoSession()
+		s := mgodo.NewMgoSession()
 		defer s.Close()
 		err := user.SaveUser(s)
 		if err != nil {
