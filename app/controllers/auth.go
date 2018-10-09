@@ -3,8 +3,7 @@ package controllers
 import (
 	"strings"
 
-	"github.com/lujiacn/revauth/app/revauth"
-
+	"github.com/lujiacn/revauth/app/ldapauth"
 	"github.com/lujiacn/revauth/app/models"
 
 	"github.com/revel/revel"
@@ -23,7 +22,7 @@ func (c Auth) Authenticate(account, password string) revel.Result {
 		c.Flash.Error("Please fill in account and password")
 		return c.Redirect("/login")
 	}
-	authUser := revauth.Authenticate(account, password)
+	authUser := ldapauth.Authenticate(account, password)
 	if !authUser.IsAuthenticated {
 		c.Flash.Error("Authenticate failed: %v", authUser.Error)
 		return c.Redirect("/login")
