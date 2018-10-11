@@ -10,13 +10,13 @@ import (
 	mgodo "gopkg.in/lujiacn/mgodo.v0"
 )
 
-type AuthController struct {
+type Auth struct {
 	*revel.Controller
 	mgodo.MgoController
 }
 
 //Authenticate for LDAP authenticate
-func (c *AuthController) Authenticate(account, password string) revel.Result {
+func (c *Auth) Authenticate(account, password string) revel.Result {
 	if account == "" || password == "" {
 		c.Flash.Error("Please fill in account and password")
 		return c.Redirect("/login")
@@ -56,7 +56,7 @@ func (c *AuthController) Authenticate(account, password string) revel.Result {
 }
 
 //Logout
-func (c *AuthController) Logout() revel.Result {
+func (c *Auth) Logout() revel.Result {
 	//delete cache which is logged in user info
 	cache.Delete(c.Session.ID())
 
