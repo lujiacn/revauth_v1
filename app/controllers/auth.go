@@ -3,26 +3,25 @@ package controllers
 import (
 	"strings"
 
-	"github.com/lujiacn/ldapauth"
+	"github.com/lujiacn/revauth"
 	"github.com/lujiacn/revauth/app/models"
-
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
 	mgodo "gopkg.in/lujiacn/mgodo.v0"
 )
 
-type Auth struct {
+type AuthController struct {
 	*revel.Controller
 	mgodo.MgoController
 }
 
 //Authenticate for LDAP authenticate
-func (c Auth) Authenticate(account, password string) revel.Result {
+func (c *AuthController) Authenticate(account, password string) revel.Result {
 	if account == "" || password == "" {
 		c.Flash.Error("Please fill in account and password")
 		return c.Redirect("/login")
 	}
-	authUser := ldapauth.Authenticate(account, password)
+	authUser := revauth.Authenticate(account, password)
 	if !authUser.IsAuthenticated {
 		c.Flash.Error("Authenticate failed: %v", authUser.Error)
 		return c.Redirect("/login")
@@ -57,7 +56,7 @@ func (c Auth) Authenticate(account, password string) revel.Result {
 }
 
 //Logout
-func (c Auth) Logout() revel.Result {
+func (c *AuthController) Logout() revel.Result {
 	//delete cache which is logged in user info
 	cache.Delete(c.Session.ID())
 

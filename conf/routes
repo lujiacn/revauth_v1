@@ -1,3 +1,0 @@
-POST /login  Auth.Authenticate
-POST /logout Auth.Logout
-GET  /logout Auth.Logout
