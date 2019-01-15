@@ -60,7 +60,7 @@ func (c *Auth) Logout() revel.Result {
 	//delete cache which is logged in user info
 	cache.Delete(c.Session.ID())
 
-	c.Session = make(map[string]string)
+	c.Session = make(map[string]interface{})
 	c.Flash.Success("You have logged out.")
 	return c.Redirect("/")
 }
