@@ -17,14 +17,20 @@ type Auth struct {
 
 //Authenticate for LDAP authenticate
 func (c *Auth) Authenticate(account, password string) revel.Result {
+	//get nextUrl
+	nextUrl := c.Params.Get("nextUrl")
+	if nextUrl == "" {
+		nextUrl = "/"
+	}
+
 	if account == "" || password == "" {
 		c.Flash.Error("Please fill in account and password")
-		return c.Redirect("/login")
+		return c.Redirect("/login?nextUrl=%s", nextUrl)
 	}
 	authUser := revauth.Authenticate(account, password)
 	if !authUser.IsAuthenticated {
 		c.Flash.Error("Authenticate failed: %v", authUser.Error)
-		return c.Redirect("/login")
+		return c.Redirect("/login?nextUrl=%s", nextUrl)
 	}
 
 	c.Session["Identity"] = strings.ToLower(account)
@@ -52,7 +58,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 	}(currentUser)
 
 	c.Flash.Success("Welcome, %v", currentUser.Name)
-	return c.Redirect("/")
+	return c.Redirect(nextUrl)
 }
 
 //Logout
