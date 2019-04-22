@@ -62,9 +62,11 @@ func QueryAndSave(account string) (*models.User, error) {
 	authUser := Query(account)
 
 	if authUser.Error != "" && authUser.Error != "<nil>" {
+		fmt.Println("Errors", authUser.Error)
 		return nil, fmt.Errorf(authUser.Error)
 	}
 	if authUser.NotExist {
+		fmt.Println("Not exist", authUser.Error)
 		return nil, fmt.Errorf("User not exist")
 	}
 
