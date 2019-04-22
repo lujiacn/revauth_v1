@@ -75,6 +75,6 @@ func QueryAndSave(account string) (*models.User, error) {
 	user.Depart = authUser.Depart
 	s := mgodo.NewMgoSession()
 	defer s.Close()
-	mgodo.New(s, user).Save()
+	user.SaveUser(s)
 	return user, nil
 }
