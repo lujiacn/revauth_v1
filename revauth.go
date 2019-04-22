@@ -46,17 +46,14 @@ func Authenticate(account, password string) *gAuth.AuthReply {
 func Query(account string) *gAuth.QueryReply {
 	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
 	if err != nil {
-		fmt.Println("connect error", err)
 		return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
 	}
 	defer conn.Close()
 	c := gAuth.NewAuthClient(conn)
 	r, err := c.Query(context.Background(), &gAuth.QueryRequest{Account: account})
 	if err != nil {
-		fmt.Println("Query user error", err)
 		return &gAuth.QueryReply{Error: fmt.Sprintf("User not found: %v ", err)}
 	}
-	fmt.Println("r", r)
 	return r
 
 }
