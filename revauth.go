@@ -63,7 +63,8 @@ func Query(account string) *gAuth.QueryReply {
 
 func QueryAndSave(account string) (*models.User, error) {
 	authUser := Query(account)
-	if authUser.Error != "" {
+
+	if authUser.Error != "" && authUser.Error != "<nil>" {
 		return nil, fmt.Errorf(authUser.Error)
 	}
 	if authUser.NotExist {
