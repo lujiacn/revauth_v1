@@ -56,6 +56,7 @@ func Query(account string) *gAuth.QueryReply {
 		fmt.Println("Query user error", err)
 		return &gAuth.QueryReply{Error: fmt.Sprintf("User not found: %v ", err)}
 	}
+	fmt.Println("r", r)
 	return r
 
 }
