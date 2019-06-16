@@ -58,6 +58,45 @@ func Query(account string) *gAuth.QueryReply {
 
 }
 
+func QueryMail(email string) *gAuth.QueryReply {
+	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
+	if err != nil {
+		return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
+	}
+	defer conn.Close()
+	c := gAuth.NewAuthClient(conn)
+	r, err := c.Query(context.Background(), &gAuth.QueryRequest{Email: email})
+	if err != nil {
+		return &gAuth.QueryReply{Error: fmt.Sprintf("User not found: %v ", err)}
+	}
+	return r
+
+}
+
+func QueryMailAndSave(email string) (*models.User, error) {
+	authUser := QueryMail(email)
+
+	if authUser.Error != "" && authUser.Error != "<nil>" {
+		fmt.Println("Errors", authUser.Error)
+		return nil, fmt.Errorf(authUser.Error)
+	}
+	if authUser.NotExist {
+		fmt.Println("Not exist", authUser.Error)
+		return nil, fmt.Errorf("User not exist")
+	}
+
+	user := new(models.User)
+	user.Identity = strings.ToLower(authUser.Account)
+	user.Mail = authUser.Email
+	user.Avatar = authUser.Avatar
+	user.Name = authUser.Name
+	user.Depart = authUser.Depart
+	s := mgodo.NewMgoSession()
+	defer s.Close()
+	user.SaveUser(s)
+	return user, nil
+}
+
 func QueryAndSave(account string) (*models.User, error) {
 	authUser := Query(account)
 
