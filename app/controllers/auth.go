@@ -42,6 +42,8 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 	currentUser.Avatar = authUser.Avatar
 	currentUser.Name = authUser.Name
 	currentUser.Depart = authUser.Depart
+	currentUser.First = authUser.First
+	currentUser.Last = authUser.Last
 
 	// cache user info
 	go cache.Set(c.Session.ID(), currentUser, cache.DefaultExpiryTime)
