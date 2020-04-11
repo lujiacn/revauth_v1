@@ -1,6 +1,9 @@
 package models
 
 import (
+	"fmt"
+	"strings"
+
 	mgo "github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	mgodo "gopkg.in/lujiacn/mgodo.v0"
@@ -30,6 +33,21 @@ func (c *User) GetAvatar() {
 	if c.Avatar == "" {
 		c.Avatar = DefaultAvatar
 	}
+}
+
+// GetName Parse full name from Li, Ming R&D/CN format
+func (c *User) GetName() string {
+	t := strings.Split(c.Name, ",")
+	if len(t) < 2 {
+		return c.Name
+	}
+	lastName := t[0]
+	t2 := strings.Split(strings.TrimSpace(t[1]), " ")
+	if len(t2) < 1 {
+		return c.Name
+	}
+	firstName := t2[0]
+	return fmt.Sprintf("%s, %s", firstName, lastName)
 }
 
 //Save authorized saUser to local User
