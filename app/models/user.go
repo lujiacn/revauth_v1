@@ -39,8 +39,14 @@ func (c *User) GetAvatar() {
 func (c *User) GetName() string {
 	t := strings.Split(c.Name, ",")
 	if len(t) < 2 {
+		tList := strings.Split(c.Name, " ")
+		if len(tList) >= 2 {
+			c.Name = fmt.Sprintf("%s, %s", tList[0], tList[1])
+			c.GetName()
+		}
 		return c.Name
 	}
+
 	lastName := t[0]
 	t2 := strings.Split(strings.TrimSpace(t[1]), " ")
 	if len(t2) < 1 {
