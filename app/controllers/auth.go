@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"fmt"
+	"net"
+	"net/http"
 	"strings"
 
 	"github.com/lujiacn/revauth"
@@ -29,9 +32,23 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 	}
 	authUser := revauth.Authenticate(account, password)
 	if !authUser.IsAuthenticated {
+		//Save LoginLog
+		loginLog := new(LoginLog)
+		loginLog.Account = account
+		loginLog.Status = "FAILURE"
+		loginLog.IPAddress, _ = getIP(c.Reqeust)
+		mgodo.New(c.MgoSession, loginLog).Create()
+
 		c.Flash.Error("Authenticate failed: %v", authUser.Error)
 		return c.Redirect("/login?nextUrl=%s", nextUrl)
 	}
+
+	// save login log
+	loginLog := new(LoginLog)
+	loginLog.Account = account
+	loginLog.Status = "SUCCESS"
+	loginLog.IPAddress, _ = getIP(c.Reqeust)
+	mgodo.New(c.MgoSession, loginLog).Create()
 
 	c.Session["Identity"] = strings.ToLower(account)
 
@@ -71,4 +88,34 @@ func (c *Auth) Logout() revel.Result {
 	c.Session = make(map[string]interface{})
 	c.Flash.Success("You have logged out.")
 	return c.Redirect("/")
+}
+
+func getIP(r *http.Request) (string, error) {
+	//Get IP from the X-REAL-IP header
+	ip := r.Header.Get("X-REAL-IP")
+	netIP := net.ParseIP(ip)
+	if netIP != nil {
+		return ip, nil
+	}
+
+	//Get IP from X-FORWARDED-FOR header
+	ips := r.Header.Get("X-FORWARDED-FOR")
+	splitIps := strings.Split(ips, ",")
+	for _, ip := range splitIps {
+		netIP := net.ParseIP(ip)
+		if netIP != nil {
+			return ip, nil
+		}
+	}
+
+	//Get IP from RemoteAddr
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return "", err
+	}
+	netIP = net.ParseIP(ip)
+	if netIP != nil {
+		return ip, nil
+	}
+	return "", fmt.Errorf("No valid ip found")
 }
