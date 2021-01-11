@@ -6,7 +6,7 @@ import (
 
 	mgo "github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	mgodo "gopkg.in/lujiacn/mgodo.v0"
+	mgodo "github.com/lujiacn/mgodo"
 )
 
 const (

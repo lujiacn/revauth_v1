@@ -7,7 +7,7 @@ import (
 	"github.com/lujiacn/revauth/app/models"
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
-	mgodo "gopkg.in/lujiacn/mgodo.v0"
+	mgodo "github.com/lujiacn/mgodo"
 )
 
 type Auth struct {

@@ -8,7 +8,7 @@ import (
 	"github.com/lujiacn/revauth/app/models"
 	gAuth "github.com/lujiacn/revauth/auth"
 	"google.golang.org/grpc"
-	"gopkg.in/lujiacn/mgodo.v0"
+	"github.com/lujiacn/mgodo"
 
 	"github.com/revel/revel"
 )
