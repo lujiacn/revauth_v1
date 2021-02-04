@@ -27,7 +27,7 @@ type User struct {
 	Mail            string `bson:"Mail,omitempty"`
 	Depart          string `bson:"Depart,omitempty"`
 	Avatar          string `bson:"Avatar,omitempty"`
-	IsNoExist       bool   `bson:"IsNotExist,omitempty"`
+	IsNotExist      bool   `bson:"IsNotExist,omitempty"`
 }
 
 func (c *User) GetAvatar() {
