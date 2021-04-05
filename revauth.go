@@ -2,39 +2,70 @@ package revauth
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/url"
+	"path"
 	"strings"
 
+	"github.com/lujiacn/mgodo"
 	"github.com/lujiacn/revauth/app/models"
 	gAuth "github.com/lujiacn/revauth/auth"
 	"google.golang.org/grpc"
-	"github.com/lujiacn/mgodo"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/revel/revel"
 )
 
 var (
-	grpcDial string
+	grpcDial        string
+	grpcAuthConnect string
+	conn            *grpc.ClientConn // keep connection
 )
 
 //Init reading LDAP configuration
 func Init() {
-	grpcAuthServer, ok := revel.Config.String("grpcauth.server")
-	if !ok {
-		panic("Authenticate server not defined")
+	// update grpcauth server and port to grpc://connection_string
+	var found bool
 
+	grpcAuthConnect, found = revel.Config.String("grpcauth.connect")
+	if !found {
+		panic("Authenticate connection not defined")
 	}
-	grpcAuthPort := revel.Config.StringDefault("grpcauth.port", "50051")
-	grpcDial = grpcAuthServer + ":" + grpcAuthPort
+	connect()
+}
+
+func connect() {
+	// parse connection scheme
+	h, err := url.Parse(grpcAuthConnect)
+	if err != nil {
+		panic("Invalid connection format. eg: grpc://host:port/path")
+	}
+
+	if h.Scheme == "grpc" || h.Scheme == "" {
+		conn, err = grpc.Dial(path.Join(h.Host, h.Path), grpc.WithInsecure())
+		if err != nil {
+			revel.AppLog.Critf("%v", err)
+		}
+	}
+
+	if h.Scheme == "grpcs" {
+		config := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		conn, err = grpc.Dial(path.Join(h.Host, h.Path), grpc.WithTransportCredentials(credentials.NewTLS(config)))
+		if err != nil {
+			revel.AppLog.Critf("%v", err)
+		}
+	}
 }
 
 //Authenticate do auth and return Auth object including user information and lognin success or not
 func Authenticate(account, password string) *gAuth.AuthReply {
-	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
-	if err != nil {
-		return &gAuth.AuthReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
+	if conn == nil {
+		connect()
 	}
-	defer conn.Close()
+
 	c := gAuth.NewAuthClient(conn)
 	r, err := c.Authenticate(context.Background(), &gAuth.AuthRequest{Account: account, Password: password})
 	if err != nil {
@@ -44,11 +75,10 @@ func Authenticate(account, password string) *gAuth.AuthReply {
 }
 
 func Query(account string) *gAuth.QueryReply {
-	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
-	if err != nil {
-		return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
+	if conn == nil {
+		connect()
 	}
-	defer conn.Close()
+
 	c := gAuth.NewAuthClient(conn)
 	r, err := c.Query(context.Background(), &gAuth.QueryRequest{Account: account})
 	if err != nil {
@@ -59,11 +89,11 @@ func Query(account string) *gAuth.QueryReply {
 }
 
 func QueryMail(email string) *gAuth.QueryReply {
-	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
-	if err != nil {
-		return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
+
+	if conn == nil {
+		connect()
 	}
-	defer conn.Close()
+
 	c := gAuth.NewAuthClient(conn)
 	r, err := c.Query(context.Background(), &gAuth.QueryRequest{Email: email})
 	if err != nil {
