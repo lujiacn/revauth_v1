@@ -34,7 +34,7 @@ func Init() {
 	// check grpcauth.host and grpcauth.port
 
 	if grpcAuthConnect, found = revel.Config.String("grpcauth.connect"); !found {
-		if grpcAuthHost, found = revel.Config.String("grpcauth.host"); !found {
+		if grpcAuthHost, found = revel.Config.String("grpcauth.server"); !found {
 			panic("grpcauth connection or server not defined")
 		}
 		grpcAuthPort = revel.Config.StringDefault("grpcauth.port", "50051")
