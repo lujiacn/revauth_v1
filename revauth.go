@@ -45,6 +45,7 @@ func Init() {
 }
 
 func connect() {
+	fmt.Println("Debug grpcauth", grpcAuthConnect)
 	// parse connection scheme
 	h, err := url.Parse(grpcAuthConnect)
 	if err != nil {

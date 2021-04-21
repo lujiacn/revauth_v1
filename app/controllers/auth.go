@@ -3,11 +3,11 @@ package controllers
 import (
 	"strings"
 
+	mgodo "github.com/lujiacn/mgodo"
 	"github.com/lujiacn/revauth"
 	"github.com/lujiacn/revauth/app/models"
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
-	mgodo "github.com/lujiacn/mgodo"
 )
 
 type Auth struct {
@@ -25,7 +25,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 
 	if account == "" || password == "" {
 		c.Flash.Error("Please fill in account and password")
-		return c.Redirect("/login?nextUrl=%s", nextUrl)
+		return c.Redirect(c.Request.Referer())
 	}
 	authUser := revauth.Authenticate(account, password)
 	if !authUser.IsAuthenticated {
@@ -37,7 +37,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 		mgodo.New(c.MgoSession, loginLog).Create()
 
 		c.Flash.Error("Authenticate failed: %v", authUser.Error)
-		return c.Redirect("/login?nextUrl=%s", nextUrl)
+		return c.Redirect(c.Request.Referer())
 	}
 
 	// save login log
