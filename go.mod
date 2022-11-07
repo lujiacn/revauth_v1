@@ -1,4 +1,4 @@
-module github.com/lujiacn/revauth
+module github.com/lujiacn/revauth_v1
 
 go 1.14
 
@@ -9,7 +9,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/protobuf v1.3.3
 	github.com/inconshreveable/log15 v0.0.0-20200109203555-b30bc20e4fd1 // indirect
-	github.com/lujiacn/mgodo v0.22.0 // indirect
+	github.com/lujiacn/mgodo v0.22.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/revel/config v1.0.0 // indirect

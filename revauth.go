@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/lujiacn/mgodo"
-	"github.com/lujiacn/revauth/app/models"
-	gAuth "github.com/lujiacn/revauth/auth"
+	"github.com/lujiacn/revauth_v1/app/models"
+	gAuth "github.com/lujiacn/revauth_v1/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -23,7 +23,7 @@ var (
 	conn            *grpc.ClientConn // keep connection
 )
 
-//Init reading LDAP configuration
+// Init reading LDAP configuration
 func Init() {
 	// update grpcauth server and port to grpc://connection_string
 	var found bool
@@ -70,7 +70,7 @@ func connect() {
 	}
 }
 
-//Authenticate do auth and return Auth object including user information and lognin success or not
+// Authenticate do auth and return Auth object including user information and lognin success or not
 func Authenticate(account, password string) *gAuth.AuthReply {
 	if conn == nil {
 		connect()

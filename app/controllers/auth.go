@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	mgodo "github.com/lujiacn/mgodo"
-	"github.com/lujiacn/revauth"
-	"github.com/lujiacn/revauth/app/models"
+	revauth "github.com/lujiacn/revauth_v1"
+	"github.com/lujiacn/revauth_v1/app/models"
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
 )
@@ -15,7 +15,7 @@ type Auth struct {
 	mgodo.MgoController
 }
 
-//Authenticate for LDAP authenticate
+// Authenticate for LDAP authenticate
 func (c *Auth) Authenticate(account, password string) revel.Result {
 	//get nextUrl
 	nextUrl := c.Params.Get("nextUrl")
@@ -77,7 +77,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 	return c.Redirect(nextUrl)
 }
 
-//Logout
+// Logout
 func (c *Auth) Logout() revel.Result {
 	//delete cache which is logged in user info
 	cache.Delete(c.Session.ID())
