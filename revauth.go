@@ -2,7 +2,9 @@ package revauth
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"log"
 	"net/url"
 	"path"
 	"strings"
@@ -38,15 +40,12 @@ func Init() {
 			panic("grpcauth connection or server not defined")
 		}
 		grpcAuthPort = revel.Config.StringDefault("grpcauth.port", "50051")
-		grpcAuthConnect = fmt.Sprintf("grpcs://%s:%s", grpcAuthHost, grpcAuthPort)
-	}
 
-	if grpcAuthCertPath, found = revel.Config.String("grpcauth.cert.path"); !found {
-		panic("grpcauth.cert.path not defined in app.conf")
-	}
-
-	if grpcAuthCertPath == "" {
-		panic("grpcauth.cert.path cannot be empty, please specify the path to the cert file")
+		if grpcAuthCertPath, found = revel.Config.String("grpcauth.cert.path"); found {
+			grpcAuthConnect = fmt.Sprintf("grpcs://%s:%s", grpcAuthHost, grpcAuthPort)
+		} else {
+			grpcAuthConnect = fmt.Sprintf("grpc://%s:%s", grpcAuthHost, grpcAuthPort)
+		}
 	}
 
 	connect()
@@ -68,11 +67,21 @@ func connect() {
 	}
 
 	if h.Scheme == "grpcs" {
-		tlsServerNameOverride := revel.Config.StringDefault("grpcauth.cert.cn", "")
-		creds, err := credentials.NewClientTLSFromFile(grpcAuthCertPath, tlsServerNameOverride)
-		if err != nil {
-			revel.AppLog.Critf("%v", err)
-			panic("failed to process the credentials")
+		var creds credentials.TransportCredentials
+		if grpcAuthCertPath == "" {
+			// client will not verify the server certificate, may cause man-in-middle attacks
+			config := &tls.Config{
+				InsecureSkipVerify: true,
+			}
+			creds = credentials.NewTLS(config)
+			log.Printf("grpcauth.cert.path is empty in app.conf, please specify the path to the cert file to make connection more secure")
+		} else {
+			tlsServerNameOverride := revel.Config.StringDefault("grpcauth.cert.cn", "")
+			creds, err = credentials.NewClientTLSFromFile(grpcAuthCertPath, tlsServerNameOverride)
+			if err != nil {
+				revel.AppLog.Critf("%v", err)
+				panic("failed to process the credentials")
+			}
 		}
 		conn, err = grpc.Dial(path.Join(h.Host, h.Path), grpc.WithTransportCredentials(creds))
 		if err != nil {
