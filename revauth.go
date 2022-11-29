@@ -46,6 +46,8 @@ func Init() {
 		} else {
 			grpcAuthConnect = fmt.Sprintf("grpc://%s:%s", grpcAuthHost, grpcAuthPort)
 		}
+	} else {
+		grpcAuthCertPath, _ = revel.Config.String("grpcauth.cert.path")
 	}
 
 	connect()
