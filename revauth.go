@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net/url"
 	"path"
 	"strings"
@@ -18,9 +19,10 @@ import (
 )
 
 var (
-	grpcDial        string
-	grpcAuthConnect string
-	conn            *grpc.ClientConn // keep connection
+	grpcDial         string
+	grpcAuthConnect  string
+	grpcAuthCertPath string
+	conn             *grpc.ClientConn // keep connection
 )
 
 // Init reading LDAP configuration
@@ -38,7 +40,12 @@ func Init() {
 			panic("grpcauth connection or server not defined")
 		}
 		grpcAuthPort = revel.Config.StringDefault("grpcauth.port", "50051")
-		grpcAuthConnect = fmt.Sprintf("grpc://%s:%s", grpcAuthHost, grpcAuthPort)
+
+		if grpcAuthCertPath, found = revel.Config.String("grpcauth.cert.path"); found {
+			grpcAuthConnect = fmt.Sprintf("grpcs://%s:%s", grpcAuthHost, grpcAuthPort)
+		} else {
+			grpcAuthConnect = fmt.Sprintf("grpc://%s:%s", grpcAuthHost, grpcAuthPort)
+		}
 	}
 
 	connect()
@@ -60,10 +67,23 @@ func connect() {
 	}
 
 	if h.Scheme == "grpcs" {
-		config := &tls.Config{
-			InsecureSkipVerify: true,
+		var creds credentials.TransportCredentials
+		if grpcAuthCertPath == "" {
+			// client will not verify the server certificate, may cause man-in-middle attacks
+			config := &tls.Config{
+				InsecureSkipVerify: true,
+			}
+			creds = credentials.NewTLS(config)
+			log.Printf("grpcauth.cert.path is empty in app.conf, please specify the path to the cert file to make connection more secure")
+		} else {
+			tlsServerNameOverride := revel.Config.StringDefault("grpcauth.cert.cn", "")
+			creds, err = credentials.NewClientTLSFromFile(grpcAuthCertPath, tlsServerNameOverride)
+			if err != nil {
+				revel.AppLog.Critf("%v", err)
+				panic("failed to process the credentials")
+			}
 		}
-		conn, err = grpc.Dial(path.Join(h.Host, h.Path), grpc.WithTransportCredentials(credentials.NewTLS(config)))
+		conn, err = grpc.Dial(path.Join(h.Host, h.Path), grpc.WithTransportCredentials(creds))
 		if err != nil {
 			revel.AppLog.Critf("%v", err)
 		}
