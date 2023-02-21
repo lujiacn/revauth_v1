@@ -27,11 +27,13 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 		c.Flash.Error("Please fill in account and password")
 		return c.Redirect(c.Request.Referer())
 	}
+	// account can be ID or mail
 	authUser := revauth.Authenticate(account, password)
+	authIdentity := strings.ToLower(authUser.Account) // ID returned from grpcldap service
 	if !authUser.IsAuthenticated {
 		//Save LoginLog
 		loginLog := new(models.LoginLog)
-		loginLog.Account = account
+		loginLog.Account = authIdentity
 		loginLog.Status = "FAILURE"
 		loginLog.IPAddress = c.Request.RemoteAddr
 		mgodo.New(c.MgoSession, loginLog).Create()
@@ -42,16 +44,16 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 
 	// save login log
 	loginLog := new(models.LoginLog)
-	loginLog.Account = account
+	loginLog.Account = authIdentity
 	loginLog.Status = "SUCCESS"
 	loginLog.IPAddress = c.Request.RemoteAddr
 	mgodo.New(c.MgoSession, loginLog).Create()
 
-	c.Session["Identity"] = strings.ToLower(account)
+	c.Session["Identity"] = authIdentity
 
 	//save current user information
 	currentUser := new(models.User)
-	currentUser.Identity = strings.ToLower(account)
+	currentUser.Identity = authIdentity
 	currentUser.Mail = authUser.Email
 	currentUser.Avatar = authUser.Avatar
 	currentUser.Name = authUser.Name
